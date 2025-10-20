@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from 'react';
+import { ClipboardIcon, PlusCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon } from '@heroicons/react/24/solid';
 
 type Product = {
   id: string;
@@ -13,6 +15,7 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [name, setName] = useState<string>("");
   const [modules, setModules] = useState<number>(3);
+  const [copied, setCopied] = useState<boolean>(false);
 
   const addProduct = () => {
     if (!name.trim()) return;
@@ -37,14 +40,21 @@ export default function DashboardPage() {
 
   return (
     <div className="grid gap-8">
-      <section className="rounded-xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-semibold">Creator Dashboard</h1>
+      {/* Step 1: Create a product */}
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Create a product</h1>
+            <p className="mt-1 text-gray-600">We’ll generate your unique embed for this product.</p>
+          </div>
+          <PlusCircleIcon className="h-7 w-7 text-indigo-600"/>
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto_auto] items-center">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Product/Course name"
-            className="w-full rounded border px-3 py-2"
+            placeholder="e.g. Notion Masterclass"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
           <input
             type="number"
@@ -52,19 +62,20 @@ export default function DashboardPage() {
             max={50}
             value={modules}
             onChange={(e) => setModules(parseInt(e.target.value || '1'))}
-            className="w-24 rounded border px-3 py-2"
+            className="w-28 rounded-md border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
-          <button onClick={addProduct} className="rounded bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">
-            Add
+          <button onClick={addProduct} className="rounded-md bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-700">
+            Add product
           </button>
         </div>
-        <p className="mt-2 text-sm text-gray-600">The most recently added product will be used in the embed code preview.</p>
+        <p className="mt-2 text-sm text-gray-600">Latest product appears first and is used for the embed.</p>
       </section>
 
-      <section className="rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Your Products</h2>
+      {/* Step 2: Products list */}
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+        <h2 className="text-xl font-semibold">Your products</h2>
         {products.length === 0 ? (
-          <p className="mt-2 text-gray-600">No products yet. Add one above to get started.</p>
+          <p className="mt-2 text-gray-600">No products yet. Create one above to continue.</p>
         ) : (
           <ul className="mt-4 divide-y">
             {products.map(p => (
@@ -82,14 +93,37 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <section className="rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Embed Snippet</h2>
+      {/* Step 3: Embed snippet */}
+      <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold">Embed snippet</h2>
+            <p className="mt-1 text-gray-600">Paste this on the page you want to track.</p>
+          </div>
+          {copied ? (
+            <span className="inline-flex items-center gap-2 text-emerald-600 text-sm"><CheckCircleIcon className="h-5 w-5"/> Copied</span>
+          ) : null}
+        </div>
         {!embedCode ? (
-          <p className="mt-2 text-gray-600">Add a product to see the embed snippet.</p>
+          <p className="mt-2 text-gray-600">Add a product to see your embed.</p>
         ) : (
           <div className="mt-3">
             <pre className="overflow-auto rounded-md bg-gray-900 p-4 text-sm text-emerald-200"><code>{embedCode}</code></pre>
-            <p className="mt-2 text-sm text-gray-600">Paste this into your site where you want to track events.</p>
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                onClick={() => {
+                  if (!embedCode) return;
+                  navigator.clipboard.writeText(embedCode).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  });
+                }}
+                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-white hover:bg-black"
+              >
+                <ClipboardIcon className="h-5 w-5"/> Copy
+              </button>
+              <a href="/track.js" target="_blank" className="text-sm text-indigo-700 hover:underline">Open track.js</a>
+            </div>
           </div>
         )}
       </section>
